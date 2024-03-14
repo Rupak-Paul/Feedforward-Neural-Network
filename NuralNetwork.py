@@ -57,17 +57,17 @@ class NuralNetwork:
                 A, H = self.__forwardPropagation(X)
                 diffW, diffB = self.__backwardPropagation(A, H, X, Y)
                 
-                dw = self.__addGradient(dw, diffW)
-                db = self.__addGradient(db, diffB)
+                dw = self.__addTwoGradient(dw, diffW)
+                db = self.__addTwoGradient(db, diffB)
                 
                 loss += self.__calculateLoss(H[self.numOfHiddenLayer], Y)
                 pointSeen += 1
                 if(pointSeen % batchSize == 0):
-                    uw = self.__addGradient(self.__multiplyGradient(prev_uw, beta), self.__multiplyGradient(dw, eta))
-                    ub = self.__addGradient(self.__multiplyGradient(prev_ub, beta), self.__multiplyGradient(db, eta))
+                    uw = self.__addTwoGradient(self.__multiplyGradientByConstant(prev_uw, beta), self.__multiplyGradientByConstant(dw, eta))
+                    ub = self.__addTwoGradient(self.__multiplyGradientByConstant(prev_ub, beta), self.__multiplyGradientByConstant(db, eta))
                     
-                    self.W = self.__subtractGradient(self.W, uw)
-                    self.B = self.__subtractGradient(self.B, ub)
+                    self.W = self.__subtractTwoGradient(self.W, uw)
+                    self.B = self.__subtractTwoGradient(self.B, ub)
                     
                     prev_uw = uw
                     prev_ub = ub
@@ -80,32 +80,32 @@ class NuralNetwork:
         
         for i in range(epochs):
             dw, db = self.__initilizeWandB()
-            v_w = self.__multiplyGradient(prev_vw, beta)
-            v_b = self.__multiplyGradient(prev_vb, beta)
+            v_w = self.__multiplyGradientByConstant(prev_vw, beta)
+            v_b = self.__multiplyGradientByConstant(prev_vb, beta)
             pointSeen = 0
             loss = 0.0
             
             for X, Y in zip(train_X, train_Y):
-                self.W = self.__subtractGradient(self.W, v_w)
-                self.B = self.__subtractGradient(self.B, v_b)
+                self.W = self.__subtractTwoGradient(self.W, v_w)
+                self.B = self.__subtractTwoGradient(self.B, v_b)
                 
                 A, H = self.__forwardPropagation(X)
                 diffW, diffB = self.__backwardPropagation(A, H, X, Y)
                 
-                dw = self.__addGradient(dw, diffW)
-                db = self.__addGradient(db, diffB)
+                dw = self.__addTwoGradient(dw, diffW)
+                db = self.__addTwoGradient(db, diffB)
                 
-                self.W = self.__addGradient(self.W, v_w)
-                self.B = self.__addGradient(self.B, v_b)
+                self.W = self.__addTwoGradient(self.W, v_w)
+                self.B = self.__addTwoGradient(self.B, v_b)
                 
                 loss += self.__calculateLoss(H[self.numOfHiddenLayer], Y)
                 pointSeen += 1
                 if(pointSeen % batchSize == 0):
-                    vw = self.__addGradient(self.__multiplyGradient(prev_vw, beta), self.__multiplyGradient(dw, eta))
-                    vb = self.__addGradient(self.__multiplyGradient(prev_vb, beta), self.__multiplyGradient(db, eta))
+                    vw = self.__addTwoGradient(self.__multiplyGradientByConstant(prev_vw, beta), self.__multiplyGradientByConstant(dw, eta))
+                    vb = self.__addTwoGradient(self.__multiplyGradientByConstant(prev_vb, beta), self.__multiplyGradientByConstant(db, eta))
                     
-                    self.W = self.__subtractGradient(self.W, vw)
-                    self.B = self.__subtractGradient(self.B, vb)
+                    self.W = self.__subtractTwoGradient(self.W, vw)
+                    self.B = self.__subtractTwoGradient(self.B, vb)
                     
                     prev_vw = vw
                     prev_vb = vb
@@ -123,16 +123,82 @@ class NuralNetwork:
                 A, H = self.__forwardPropagation(X)
                 diffW, diffB = self.__backwardPropagation(A, H, X, Y)
                 
-                dw = self.__addGradient(dw, diffW)
-                db = self.__addGradient(db, diffB)
+                dw = self.__addTwoGradient(dw, diffW)
+                db = self.__addTwoGradient(db, diffB)
                 
                 loss += self.__calculateLoss(H[self.numOfHiddenLayer], Y)
                 pointSeen += 1
                 if(pointSeen % batchSize == 0):
-                    self.W = self.__subtractGradient(self.W, self.__multiplyGradient(dw, eta))
-                    self.B = self.__subtractGradient(self.B, self.__multiplyGradient(db, eta))
+                    self.W = self.__subtractTwoGradient(self.W, self.__multiplyGradientByConstant(dw, eta))
+                    self.B = self.__subtractTwoGradient(self.B, self.__multiplyGradientByConstant(db, eta))
                     dw, db = self.__initilizeWandB()
             
+            print("Average Loss after epoch ", i+1, " : ", loss/len(train_X))
+    
+    def trainByRmsprop(self, epochs, batchSize, eta, beta, eps, train_X, train_Y, val_X, val_Y):
+        v_w, v_b = self.__initilizeWandB()
+        
+        for i in range(epochs):
+            dw, db = self.__initilizeWandB()
+            pointSeen = 0
+            loss = 0.0
+            
+            for X, Y in zip(train_X, train_Y):
+                A, H = self.__forwardPropagation(X)
+                diffW, diffB = self.__backwardPropagation(A, H, X, Y)
+                
+                dw = self.__addTwoGradient(dw, diffW)
+                db = self.__addTwoGradient(db, diffB)
+                
+                loss += self.__calculateLoss(H[self.numOfHiddenLayer], Y)
+                pointSeen += 1
+                if(pointSeen % batchSize == 0):
+                    v_w = self.__addTwoGradient(self.__multiplyGradientByConstant(v_w, beta), self.__multiplyGradientByConstant(self.__squareOfElementsOfGradient(dw), (1.0-beta)))
+                    v_b = self.__addTwoGradient(self.__multiplyGradientByConstant(v_b, beta), self.__multiplyGradientByConstant(self.__squareOfElementsOfGradient(db), (1.0-beta)))
+                    
+                    self.W = self.__subtractTwoGradient(self.W, self.__divideTwoGradient(self.__multiplyGradientByConstant(dw, eta), self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_w), eps)))
+                    self.B = self.__subtractTwoGradient(self.B, self.__divideTwoGradient(self.__multiplyGradientByConstant(db, eta), self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_b), eps)))
+                    
+                    dw, db = self.__initilizeWandB()
+                
+            print("Average Loss after epoch ", i+1, " : ", loss/len(train_X))
+    
+    def trainByAdam(self, epochs, batchSize, eta, beta1, beta2, eps, train_X, train_Y, val_X, val_Y):
+        m_w, m_b = self.__initilizeWandB()
+        v_w, v_b = self.__initilizeWandB()
+        
+        for i in range(epochs):
+            dw, db = self.__initilizeWandB()
+            pointSeen = 0
+            loss = 0.0
+            
+            for X, Y in zip(train_X, train_Y):
+                A, H = self.__forwardPropagation(X)
+                diffW, diffB = self.__backwardPropagation(A, H, X, Y)
+                
+                dw = self.__addTwoGradient(dw, diffW)
+                db = self.__addTwoGradient(db, diffB)
+                
+                loss += self.__calculateLoss(H[self.numOfHiddenLayer], Y)
+                pointSeen += 1
+                if(pointSeen % batchSize == 0):
+                    m_w = self.__addTwoGradient(self.__multiplyGradientByConstant(m_w, beta1), self.__multiplyGradientByConstant(dw, (1.0-beta1)))
+                    m_b = self.__addTwoGradient(self.__multiplyGradientByConstant(m_b, beta1), self.__multiplyGradientByConstant(db, (1.0-beta1)))
+                    v_w = self.__addTwoGradient(self.__multiplyGradientByConstant(v_w, beta2), self.__multiplyGradientByConstant(self.__squareOfElementsOfGradient(dw), (1.0-beta2)))
+                    v_b = self.__addTwoGradient(self.__multiplyGradientByConstant(v_b, beta2), self.__multiplyGradientByConstant(self.__squareOfElementsOfGradient(db), (1.0-beta2)))
+                    
+                    c1 = 1.0 / (1.0 - np.power(beta1, i+1))
+                    c2 = 1.0 / (1.0 - np.power(beta2, i+1))
+                    m_w_hat = self.__multiplyGradientByConstant(m_w, c1)
+                    m_b_hat = self.__multiplyGradientByConstant(m_b, c1)
+                    v_w_hat = self.__multiplyGradientByConstant(v_w, c2)
+                    v_b_hat = self.__multiplyGradientByConstant(v_b, c2)
+                    
+                    self.W = self.__subtractTwoGradient(self.W, self.__divideTwoGradient(self.__multiplyGradientByConstant(m_w_hat, eta), self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_w_hat), eps)))
+                    self.B = self.__subtractTwoGradient(self.B, self.__divideTwoGradient(self.__multiplyGradientByConstant(m_b_hat, eta), self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_b_hat), eps)))
+                    
+                    dw, db = self.__initilizeWandB()
+                
             print("Average Loss after epoch ", i+1, " : ", loss/len(train_X))
     
     def __forwardPropagation(self, input):
@@ -196,25 +262,53 @@ class NuralNetwork:
         
         return H
 
-    def __addGradient(self, grad, x):
+    def __addTwoGradient(self, grad, x):
         ans = []
         for i in range(len(grad)):
             ans.append(grad[i] + x[i])
         
         return ans
     
-    def __subtractGradient(self, grad, x):  
+    def __subtractTwoGradient(self, grad, x):  
         ans = []
         for i in range(len(grad)):
             ans.append(grad[i] - x[i])
         
         return ans
     
-    def __multiplyGradient(self, grad, x):
+    def __divideTwoGradient(self, grad1, grad2):
+        ans = []
+        for i in range(len(grad1)):
+            ans.append(grad1[i] / grad2[i])
+        
+        return ans
+    
+    def __squareOfElementsOfGradient(self, grad):
+        ans = []
+        for i in range(len(grad)):
+            ans.append(np.square(grad[i]))
+        
+        return ans
+    
+    def __rootOfElementsOfGradient(self, grad):
+        ans = []
+        for i in range(len(grad)):
+            ans.append(np.sqrt(grad[i]))
+        
+        return ans       
+    
+    def __multiplyGradientByConstant(self, grad, x):
         ans = []
         for i in range(len(grad)):
             ans.append(x * grad[i])
         
+        return ans
+
+    def __addGradientbyConstant(self, grad, x):
+        ans = []
+        for i in range(len(grad)):
+            ans.append(grad[i] + x)
+
         return ans
 
     def __calculateLoss(self, y_hat, y):
@@ -281,6 +375,9 @@ def main():
     weightDecay = 0.5
     learningRate = 1e-3
     beta = 0.9
+    beta1 = 0.9
+    beta2 = 0.999
+    eps = 1e-4
     optimizer = "sgd"
     batchSize = 16
     weightInitialisation = "Xavier"
@@ -289,7 +386,7 @@ def main():
     outputSize = 10
     
     NL = NuralNetwork(hiddenLayers, hiddenLayerSize, inputSize, outputSize, activationFunction, weightInitialisation)
-    NL.trainByMomentumGradientDescent(epochs, batchSize, learningRate, beta, train_images, train_labels, val_images, val_labels)
+    NL.trainByAdam(epochs, batchSize, learningRate, beta1, beta2, eps, train_images, train_labels, val_images, val_labels)
     
     correctPrediction = 0
     for X, Y in zip(test_images, test_labels):
