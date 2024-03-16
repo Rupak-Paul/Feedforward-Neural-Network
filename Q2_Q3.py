@@ -383,10 +383,10 @@ class NuralNetwork:
         return correctPrediction / len(X)
 
     def __calculateAndPrintLossAndAccuracy(self, train_X, train_Y, val_X, val_Y, lossFunction):
-        trainLoss = self.__calculateAvgLoss(self.train_X, self.train_Y, self.lossFunction)
-        trainAccuracy = self.__calculateAvgAccuracy(self.train_X, self.train_Y)
-        validationLoss = self.__calculateAvgLoss(self.val_X, self.val_Y, self.lossFunction)
-        validationAccuracy = self.__calculateAvgAccuracy(self.val_X, self.val_Y)
+        trainLoss = self.__calculateAvgLoss(train_X, train_Y, lossFunction)
+        trainAccuracy = self.__calculateAvgAccuracy(train_X, train_Y)
+        validationLoss = self.__calculateAvgLoss(val_X, val_Y, lossFunction)
+        validationAccuracy = self.__calculateAvgAccuracy(val_X, val_Y)
         
         print("Train Loss: ", trainLoss)
         print("Train Accuracy: ", trainAccuracy)
@@ -422,6 +422,7 @@ class NuralNetwork:
             return 1.0
 
 
+
 def main():
     # Load MNIST data using Keras
     (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
@@ -448,26 +449,26 @@ def main():
     # batchSize:            16, 32, 64
     # weightInitialisation: random, Xavier
     # activationFunctions:  sigmoid, tanh, ReLU
+    # lossFunction:         cross entropy, squared error
 
     epochs = 10
     hiddenLayers = 3
     hiddenLayerSize = 32
-    weightDecay = 0
-    weightDecay = 0.5
+    weightDecay = 0.0005
     learningRate = 1e-3
     beta = 0.9
     beta1 = 0.9
     beta2 = 0.999
-    eps = 1e-4
     optimizer = "sgd"
     batchSize = 16
-    weightInitialisation = "random"
-    activationFunction = "tanh"
+    weightInitialisation = "Xavier"
+    activationFunction = "ReLU"
+    lossFunction = "cross entropy"
     inputSize = 28 * 28
     outputSize = 10
     
     NL = NuralNetwork(hiddenLayers, hiddenLayerSize, inputSize, outputSize, activationFunction, weightInitialisation)
-    NL.trainByNadam(epochs, batchSize, learningRate, beta1, beta2, eps, train_images, train_labels, val_images, val_labels)
+    NL.trainByStochasticGradientDescent(epochs, batchSize, learningRate, train_images, train_labels, val_images, val_labels, lossFunction, weightDecay)
     
     correctPrediction = 0
     for X, Y in zip(test_images, test_labels):
