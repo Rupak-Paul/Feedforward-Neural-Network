@@ -16,7 +16,7 @@ class NuralNetwork:
         B = []
         
         if(initilizationMethod == "random"):
-            W.append(np.random.rand((self.sizeOfHiddenLayer, self.inputSize)))
+            W.append(np.random.rand(self.sizeOfHiddenLayer, self.inputSize))
             B.append(np.random.rand(self.sizeOfHiddenLayer))
         elif(initilizationMethod == "Xavier"):
             W.append(np.random.normal(0.0, 1.0/np.sqrt(self.inputSize), (self.sizeOfHiddenLayer, self.inputSize)))
@@ -27,7 +27,7 @@ class NuralNetwork:
         
         for i in range(1, self.numOfHiddenLayer+1):
             if(initilizationMethod == "random"):
-                W.append(np.random.rand((self.sizeOfHiddenLayer, self.sizeOfHiddenLayer)))
+                W.append(np.random.rand(self.sizeOfHiddenLayer, self.sizeOfHiddenLayer))
                 B.append(np.random.rand(self.sizeOfHiddenLayer))
             
             elif(initilizationMethod == "Xavier"):
@@ -201,6 +201,45 @@ class NuralNetwork:
                 
             print("Average Loss after epoch ", i+1, " : ", loss/len(train_X))
     
+    def trainByNadam(self, epochs, batchSize, eta, beta1, beta2, eps, train_X, train_Y, val_X, val_Y):
+        m_w, m_b = self.__initilizeWandB()
+        v_w, v_b = self.__initilizeWandB()
+        
+        for i in range(epochs):
+            dw, db = self.__initilizeWandB()
+            pointSeen = 0
+            loss = 0.0
+            
+            for X, Y in zip(train_X, train_Y):
+                A, H = self.__forwardPropagation(X)
+                diffW, diffB = self.__backwardPropagation(A, H, X, Y)
+                
+                dw = self.__addTwoGradient(dw, diffW)
+                db = self.__addTwoGradient(db, diffB)
+               
+                loss += self.__calculateLoss(H[self.numOfHiddenLayer], Y)
+                pointSeen += 1
+                if(pointSeen % batchSize == 0):
+                    m_w = self.__addTwoGradient(self.__multiplyGradientByConstant(m_w, beta1), self.__multiplyGradientByConstant(dw, (1.0-beta1)))
+                    m_b = self.__addTwoGradient(self.__multiplyGradientByConstant(m_b, beta1), self.__multiplyGradientByConstant(db, (1.0-beta1)))
+                    v_w = self.__addTwoGradient(self.__multiplyGradientByConstant(v_w, beta2), self.__multiplyGradientByConstant(self.__squareOfElementsOfGradient(dw), (1.0-beta2)))
+                    v_b = self.__addTwoGradient(self.__multiplyGradientByConstant(v_b, beta2), self.__multiplyGradientByConstant(self.__squareOfElementsOfGradient(db), (1.0-beta2)))
+                    
+                    c1 = 1.0 / (1.0 - np.power(beta1, i+1))
+                    c2 = 1.0 / (1.0 - np.power(beta2, i+1))
+                    m_w_hat = self.__multiplyGradientByConstant(m_w, c1)
+                    m_b_hat = self.__multiplyGradientByConstant(m_b, c1)
+                    v_w_hat = self.__multiplyGradientByConstant(v_w, c2)
+                    v_b_hat = self.__multiplyGradientByConstant(v_b, c2)
+                   
+                    c3 = (1.0-beta1) / (1.0-beta1**(i+1))
+                    self.W = self.__subtractTwoGradient(self.W, self.__multiplyTwoGradient(self.__divideGrdientByConstant(eta, self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_w_hat), eps)), self.__addTwoGradient(self.__multiplyGradientByConstant(m_w_hat, beta1), self.__multiplyGradientByConstant(dw, c3))))
+                    self.B = self.__subtractTwoGradient(self.B, self.__multiplyTwoGradient(self.__divideGrdientByConstant(eta, self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_b_hat), eps)), self.__addTwoGradient(self.__multiplyGradientByConstant(m_b_hat, beta1), self.__multiplyGradientByConstant(db, c3))))
+                
+                    dw, db = self.__initilizeWandB()
+                
+            print("Average Loss after epoch ", i+1, " : ", loss/len(train_X))
+    
     def __forwardPropagation(self, input):
         A = []
         H = []
@@ -283,6 +322,13 @@ class NuralNetwork:
         
         return ans
     
+    def __multiplyTwoGradient(self, grad1, grad2):
+        ans = []
+        for i in range(len(grad1)):
+            ans.append(grad1[i] * grad2[i])
+        
+        return ans
+    
     def __squareOfElementsOfGradient(self, grad):
         ans = []
         for i in range(len(grad)):
@@ -296,6 +342,13 @@ class NuralNetwork:
             ans.append(np.sqrt(grad[i]))
         
         return ans       
+    
+    def __divideGrdientByConstant(self, const, grad):
+        ans = []
+        for i in range(len(grad)):
+            ans.append(const / grad[i])
+        
+        return ans
     
     def __multiplyGradientByConstant(self, grad, x):
         ans = []
@@ -380,13 +433,13 @@ def main():
     eps = 1e-4
     optimizer = "sgd"
     batchSize = 16
-    weightInitialisation = "Xavier"
-    activationFunction = "sigmoid"
+    weightInitialisation = "random"
+    activationFunction = "tanh"
     inputSize = 28 * 28
     outputSize = 10
     
     NL = NuralNetwork(hiddenLayers, hiddenLayerSize, inputSize, outputSize, activationFunction, weightInitialisation)
-    NL.trainByAdam(epochs, batchSize, learningRate, beta1, beta2, eps, train_images, train_labels, val_images, val_labels)
+    NL.trainByNadam(epochs, batchSize, learningRate, beta1, beta2, eps, train_images, train_labels, val_images, val_labels)
     
     correctPrediction = 0
     for X, Y in zip(test_images, test_labels):
