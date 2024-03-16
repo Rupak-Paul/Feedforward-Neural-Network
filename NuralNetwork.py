@@ -45,7 +45,7 @@ class NuralNetwork:
         output = output[:self.outputSize]
         return np.argmax(output)
 
-    def trainByMomentumGradientDescent(self, epochs, batchSize, eta, beta, train_X, train_Y, val_X, val_Y, lossFunction):
+    def trainByMomentumGradientDescent(self, epochs, batchSize, eta, beta, train_X, train_Y, val_X, val_Y, lossFunction, weightDecay):
         prev_uw, prev_ub = self.__initilizeWandB()
         
         for i in range(epochs):
@@ -54,7 +54,7 @@ class NuralNetwork:
             
             for X, Y in zip(train_X, train_Y):
                 A, H = self.__forwardPropagation(X)
-                diffW, diffB = self.__backwardPropagation(A, H, X, Y)
+                diffW, diffB = self.__backwardPropagation(A, H, X, Y, weightDecay)
                 
                 dw = self.__addTwoGradient(dw, diffW)
                 db = self.__addTwoGradient(db, diffB)
@@ -75,7 +75,7 @@ class NuralNetwork:
             trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
             print()
             
-    def trainByNesterovGradientDescent(self, epochs, batchSize, eta, beta, train_X, train_Y, val_X, val_Y, lossFunction):
+    def trainByNesterovGradientDescent(self, epochs, batchSize, eta, beta, train_X, train_Y, val_X, val_Y, lossFunction, weightDecay):
         prev_vw, prev_vb = self.__initilizeWandB()
         
         for i in range(epochs):
@@ -89,7 +89,7 @@ class NuralNetwork:
                 self.B = self.__subtractTwoGradient(self.B, v_b)
                 
                 A, H = self.__forwardPropagation(X)
-                diffW, diffB = self.__backwardPropagation(A, H, X, Y)
+                diffW, diffB = self.__backwardPropagation(A, H, X, Y, weightDecay)
                 
                 dw = self.__addTwoGradient(dw, diffW)
                 db = self.__addTwoGradient(db, diffB)
@@ -113,14 +113,14 @@ class NuralNetwork:
             trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
             print()
 
-    def trainByStochasticGradientDescent(self, epochs, batchSize, eta, train_X, train_Y, val_X, val_Y, lossFunction): 
+    def trainByStochasticGradientDescent(self, epochs, batchSize, eta, train_X, train_Y, val_X, val_Y, lossFunction, weightDecay): 
         for i in range(epochs):
             dw, db = self.__initilizeWandB()
             pointSeen = 0
             
             for X, Y in zip(train_X, train_Y):
                 A, H = self.__forwardPropagation(X)
-                diffW, diffB = self.__backwardPropagation(A, H, X, Y)
+                diffW, diffB = self.__backwardPropagation(A, H, X, Y, weightDecay)
                 
                 dw = self.__addTwoGradient(dw, diffW)
                 db = self.__addTwoGradient(db, diffB)
@@ -135,7 +135,7 @@ class NuralNetwork:
             trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
             print()
     
-    def trainByRmsprop(self, epochs, batchSize, eta, beta, eps, train_X, train_Y, val_X, val_Y, lossFunction):
+    def trainByRmsprop(self, epochs, batchSize, eta, beta, eps, train_X, train_Y, val_X, val_Y, lossFunction, weightDecay):
         v_w, v_b = self.__initilizeWandB()
         
         for i in range(epochs):
@@ -144,7 +144,7 @@ class NuralNetwork:
             
             for X, Y in zip(train_X, train_Y):
                 A, H = self.__forwardPropagation(X)
-                diffW, diffB = self.__backwardPropagation(A, H, X, Y)
+                diffW, diffB = self.__backwardPropagation(A, H, X, Y, weightDecay)
                 
                 dw = self.__addTwoGradient(dw, diffW)
                 db = self.__addTwoGradient(db, diffB)
@@ -163,7 +163,7 @@ class NuralNetwork:
             trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
             print()
     
-    def trainByAdam(self, epochs, batchSize, eta, beta1, beta2, eps, train_X, train_Y, val_X, val_Y, lossFunction):
+    def trainByAdam(self, epochs, batchSize, eta, beta1, beta2, eps, train_X, train_Y, val_X, val_Y, lossFunction, weightDecay):
         m_w, m_b = self.__initilizeWandB()
         v_w, v_b = self.__initilizeWandB()
         
@@ -173,7 +173,7 @@ class NuralNetwork:
             
             for X, Y in zip(train_X, train_Y):
                 A, H = self.__forwardPropagation(X)
-                diffW, diffB = self.__backwardPropagation(A, H, X, Y)
+                diffW, diffB = self.__backwardPropagation(A, H, X, Y, weightDecay)
                 
                 dw = self.__addTwoGradient(dw, diffW)
                 db = self.__addTwoGradient(db, diffB)
@@ -201,7 +201,7 @@ class NuralNetwork:
             trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
             print()
     
-    def trainByNadam(self, epochs, batchSize, eta, beta1, beta2, eps, train_X, train_Y, val_X, val_Y, lossFunction):
+    def trainByNadam(self, epochs, batchSize, eta, beta1, beta2, eps, train_X, train_Y, val_X, val_Y, lossFunction, weightDecay):
         m_w, m_b = self.__initilizeWandB()
         v_w, v_b = self.__initilizeWandB()
         
@@ -211,7 +211,7 @@ class NuralNetwork:
             
             for X, Y in zip(train_X, train_Y):
                 A, H = self.__forwardPropagation(X)
-                diffW, diffB = self.__backwardPropagation(A, H, X, Y)
+                diffW, diffB = self.__backwardPropagation(A, H, X, Y, weightDecay)
                 
                 dw = self.__addTwoGradient(dw, diffW)
                 db = self.__addTwoGradient(db, diffB)
@@ -256,7 +256,7 @@ class NuralNetwork:
 
         return A, H
 
-    def __backwardPropagation(self, A, H, input, output):
+    def __backwardPropagation(self, A, H, input, output, weightDecay):
         Y = np.zeros(self.sizeOfHiddenLayer)
         Y[output] = 1.0
         
@@ -267,7 +267,7 @@ class NuralNetwork:
         delA = -1.0 * (Y - YHat)
         
         for i in range(self.numOfHiddenLayer, 0, -1):
-            delW = np.matmul(delA.reshape(delA.size, 1), H[i-1].reshape(1, H[i-1].size))
+            delW = np.matmul(delA.reshape(delA.size, 1), H[i-1].reshape(1, H[i-1].size)) + (weightDecay * self.W[i])
             delB = delA
             
             diffW[i] = delW
@@ -283,7 +283,7 @@ class NuralNetwork:
             elif(self.activationFun == "ReLU"):
                 delA = delH * np.vectorize(self.__diffRelu)(A[i-1])
 
-        diffW[0] = np.matmul(delA.reshape(delA.size, 1), input.reshape(1, input.size))
+        diffW[0] = np.matmul(delA.reshape(delA.size, 1), input.reshape(1, input.size)) + (weightDecay * self.W[0])
         diffB[0] = delA
         
         return diffW, diffB
@@ -452,6 +452,7 @@ def main():
     epochs = 10
     hiddenLayers = 3
     hiddenLayerSize = 32
+    weightDecay = 0
     weightDecay = 0.5
     learningRate = 1e-3
     beta = 0.9
