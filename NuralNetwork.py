@@ -45,13 +45,12 @@ class NuralNetwork:
         output = output[:self.outputSize]
         return np.argmax(output)
 
-    def trainByMomentumGradientDescent(self, epochs, batchSize, eta, beta, train_X, train_Y, val_X, val_Y):
+    def trainByMomentumGradientDescent(self, epochs, batchSize, eta, beta, train_X, train_Y, val_X, val_Y, lossFunction):
         prev_uw, prev_ub = self.__initilizeWandB()
         
         for i in range(epochs):
             dw, db = self.__initilizeWandB()
             pointSeen = 0
-            loss = 0.0
             
             for X, Y in zip(train_X, train_Y):
                 A, H = self.__forwardPropagation(X)
@@ -60,7 +59,6 @@ class NuralNetwork:
                 dw = self.__addTwoGradient(dw, diffW)
                 db = self.__addTwoGradient(db, diffB)
                 
-                loss += self.__calculateLoss(H[self.numOfHiddenLayer], Y)
                 pointSeen += 1
                 if(pointSeen % batchSize == 0):
                     uw = self.__addTwoGradient(self.__multiplyGradientByConstant(prev_uw, beta), self.__multiplyGradientByConstant(dw, eta))
@@ -72,10 +70,12 @@ class NuralNetwork:
                     prev_uw = uw
                     prev_ub = ub
                     dw, db = self.__initilizeWandB()
-                
-            print("Average Loss after epoch ", i+1, " : ", loss/len(train_X))
-
-    def trainByNesterovGradientDescent(self, epochs, batchSize, eta, beta, train_X, train_Y, val_X, val_Y):
+            
+            print("Loss after epoch ", i+1, ": ")    
+            trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
+            print()
+            
+    def trainByNesterovGradientDescent(self, epochs, batchSize, eta, beta, train_X, train_Y, val_X, val_Y, lossFunction):
         prev_vw, prev_vb = self.__initilizeWandB()
         
         for i in range(epochs):
@@ -83,7 +83,6 @@ class NuralNetwork:
             v_w = self.__multiplyGradientByConstant(prev_vw, beta)
             v_b = self.__multiplyGradientByConstant(prev_vb, beta)
             pointSeen = 0
-            loss = 0.0
             
             for X, Y in zip(train_X, train_Y):
                 self.W = self.__subtractTwoGradient(self.W, v_w)
@@ -98,7 +97,6 @@ class NuralNetwork:
                 self.W = self.__addTwoGradient(self.W, v_w)
                 self.B = self.__addTwoGradient(self.B, v_b)
                 
-                loss += self.__calculateLoss(H[self.numOfHiddenLayer], Y)
                 pointSeen += 1
                 if(pointSeen % batchSize == 0):
                     vw = self.__addTwoGradient(self.__multiplyGradientByConstant(prev_vw, beta), self.__multiplyGradientByConstant(dw, eta))
@@ -111,13 +109,14 @@ class NuralNetwork:
                     prev_vb = vb
                     dw, db = self.__initilizeWandB()
             
-            print("Average Loss after epoch ", i+1, " : ", loss/len(train_X))
+            print("Loss after epoch ", i+1, ": ")    
+            trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
+            print()
 
-    def trainByStochasticGradientDescent(self, epochs, batchSize, eta, train_X, train_Y, val_X, val_Y): 
+    def trainByStochasticGradientDescent(self, epochs, batchSize, eta, train_X, train_Y, val_X, val_Y, lossFunction): 
         for i in range(epochs):
             dw, db = self.__initilizeWandB()
             pointSeen = 0
-            loss = 0.0
             
             for X, Y in zip(train_X, train_Y):
                 A, H = self.__forwardPropagation(X)
@@ -126,22 +125,22 @@ class NuralNetwork:
                 dw = self.__addTwoGradient(dw, diffW)
                 db = self.__addTwoGradient(db, diffB)
                 
-                loss += self.__calculateLoss(H[self.numOfHiddenLayer], Y)
                 pointSeen += 1
                 if(pointSeen % batchSize == 0):
                     self.W = self.__subtractTwoGradient(self.W, self.__multiplyGradientByConstant(dw, eta))
                     self.B = self.__subtractTwoGradient(self.B, self.__multiplyGradientByConstant(db, eta))
                     dw, db = self.__initilizeWandB()
             
-            print("Average Loss after epoch ", i+1, " : ", loss/len(train_X))
+            print("Loss after epoch ", i+1, ": ")    
+            trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
+            print()
     
-    def trainByRmsprop(self, epochs, batchSize, eta, beta, eps, train_X, train_Y, val_X, val_Y):
+    def trainByRmsprop(self, epochs, batchSize, eta, beta, eps, train_X, train_Y, val_X, val_Y, lossFunction):
         v_w, v_b = self.__initilizeWandB()
         
         for i in range(epochs):
             dw, db = self.__initilizeWandB()
             pointSeen = 0
-            loss = 0.0
             
             for X, Y in zip(train_X, train_Y):
                 A, H = self.__forwardPropagation(X)
@@ -150,7 +149,6 @@ class NuralNetwork:
                 dw = self.__addTwoGradient(dw, diffW)
                 db = self.__addTwoGradient(db, diffB)
                 
-                loss += self.__calculateLoss(H[self.numOfHiddenLayer], Y)
                 pointSeen += 1
                 if(pointSeen % batchSize == 0):
                     v_w = self.__addTwoGradient(self.__multiplyGradientByConstant(v_w, beta), self.__multiplyGradientByConstant(self.__squareOfElementsOfGradient(dw), (1.0-beta)))
@@ -161,16 +159,17 @@ class NuralNetwork:
                     
                     dw, db = self.__initilizeWandB()
                 
-            print("Average Loss after epoch ", i+1, " : ", loss/len(train_X))
+            print("Loss after epoch ", i+1, ": ")    
+            trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
+            print()
     
-    def trainByAdam(self, epochs, batchSize, eta, beta1, beta2, eps, train_X, train_Y, val_X, val_Y):
+    def trainByAdam(self, epochs, batchSize, eta, beta1, beta2, eps, train_X, train_Y, val_X, val_Y, lossFunction):
         m_w, m_b = self.__initilizeWandB()
         v_w, v_b = self.__initilizeWandB()
         
         for i in range(epochs):
             dw, db = self.__initilizeWandB()
             pointSeen = 0
-            loss = 0.0
             
             for X, Y in zip(train_X, train_Y):
                 A, H = self.__forwardPropagation(X)
@@ -179,7 +178,6 @@ class NuralNetwork:
                 dw = self.__addTwoGradient(dw, diffW)
                 db = self.__addTwoGradient(db, diffB)
                 
-                loss += self.__calculateLoss(H[self.numOfHiddenLayer], Y)
                 pointSeen += 1
                 if(pointSeen % batchSize == 0):
                     m_w = self.__addTwoGradient(self.__multiplyGradientByConstant(m_w, beta1), self.__multiplyGradientByConstant(dw, (1.0-beta1)))
@@ -199,16 +197,17 @@ class NuralNetwork:
                     
                     dw, db = self.__initilizeWandB()
                 
-            print("Average Loss after epoch ", i+1, " : ", loss/len(train_X))
+            print("Loss after epoch ", i+1, ": ")    
+            trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
+            print()
     
-    def trainByNadam(self, epochs, batchSize, eta, beta1, beta2, eps, train_X, train_Y, val_X, val_Y):
+    def trainByNadam(self, epochs, batchSize, eta, beta1, beta2, eps, train_X, train_Y, val_X, val_Y, lossFunction):
         m_w, m_b = self.__initilizeWandB()
         v_w, v_b = self.__initilizeWandB()
         
         for i in range(epochs):
             dw, db = self.__initilizeWandB()
             pointSeen = 0
-            loss = 0.0
             
             for X, Y in zip(train_X, train_Y):
                 A, H = self.__forwardPropagation(X)
@@ -217,7 +216,6 @@ class NuralNetwork:
                 dw = self.__addTwoGradient(dw, diffW)
                 db = self.__addTwoGradient(db, diffB)
                
-                loss += self.__calculateLoss(H[self.numOfHiddenLayer], Y)
                 pointSeen += 1
                 if(pointSeen % batchSize == 0):
                     m_w = self.__addTwoGradient(self.__multiplyGradientByConstant(m_w, beta1), self.__multiplyGradientByConstant(dw, (1.0-beta1)))
@@ -238,7 +236,9 @@ class NuralNetwork:
                 
                     dw, db = self.__initilizeWandB()
                 
-            print("Average Loss after epoch ", i+1, " : ", loss/len(train_X))
+            print("Loss after epoch ", i+1, ": ")    
+            trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
+            print()
     
     def __forwardPropagation(self, input):
         A = []
@@ -305,69 +305,96 @@ class NuralNetwork:
         ans = []
         for i in range(len(grad)):
             ans.append(grad[i] + x[i])
-        
         return ans
     
     def __subtractTwoGradient(self, grad, x):  
         ans = []
         for i in range(len(grad)):
             ans.append(grad[i] - x[i])
-        
         return ans
     
     def __divideTwoGradient(self, grad1, grad2):
         ans = []
         for i in range(len(grad1)):
             ans.append(grad1[i] / grad2[i])
-        
         return ans
     
     def __multiplyTwoGradient(self, grad1, grad2):
         ans = []
         for i in range(len(grad1)):
             ans.append(grad1[i] * grad2[i])
-        
         return ans
     
     def __squareOfElementsOfGradient(self, grad):
         ans = []
         for i in range(len(grad)):
             ans.append(np.square(grad[i]))
-        
         return ans
     
     def __rootOfElementsOfGradient(self, grad):
         ans = []
         for i in range(len(grad)):
             ans.append(np.sqrt(grad[i]))
-        
         return ans       
     
     def __divideGrdientByConstant(self, const, grad):
         ans = []
         for i in range(len(grad)):
-            ans.append(const / grad[i])
-        
+            ans.append(const / grad[i])      
         return ans
     
     def __multiplyGradientByConstant(self, grad, x):
         ans = []
         for i in range(len(grad)):
             ans.append(x * grad[i])
-        
         return ans
 
     def __addGradientbyConstant(self, grad, x):
         ans = []
         for i in range(len(grad)):
             ans.append(grad[i] + x)
-
         return ans
 
-    def __calculateLoss(self, y_hat, y):
+    def __calculateCrossEntropyLoss(self, y_hat, y):
         loss = -1.0 * np.log(y_hat[y] + 1e-8)
         return loss
 
+    def __calculateSquareLoss(self, y_hat, y):
+        y_hat = y_hat[:self.outputSize]
+        y = (np.zeros(self.outputSize))[y] = 1.0
+        return np.sum(np.square(y_hat - y)) / self.outputSize
+
+    def __calculateAvgLoss(self, X, Y, lossFunction):
+        loss = 0.0
+        for input, output in zip(X, Y):
+            A, H = self.__forwardPropagation(input)
+            if(lossFunction == "cross entropy"):
+                loss += self.__calculateCrossEntropyLoss(H[self.numOfHiddenLayer], output)
+            elif(lossFunction == "squared error"):
+                loss += self.__calculateSquareLoss(H[self.numOfHiddenLayer], output)
+        return loss / len(X)
+            
+    def __calculateAvgAccuracy(self, X, Y):
+        correctPrediction = 0
+        for input, output in zip(X, Y):
+            predicetedOutput = self.predict(input)
+            if(predicetedOutput == output):
+                correctPrediction += 1
+        return correctPrediction / len(X)
+
+    def __calculateAndPrintLossAndAccuracy(self, train_X, train_Y, val_X, val_Y, lossFunction):
+        trainLoss = self.__calculateAvgLoss(self.train_X, self.train_Y, self.lossFunction)
+        trainAccuracy = self.__calculateAvgAccuracy(self.train_X, self.train_Y)
+        validationLoss = self.__calculateAvgLoss(self.val_X, self.val_Y, self.lossFunction)
+        validationAccuracy = self.__calculateAvgAccuracy(self.val_X, self.val_Y)
+        
+        print("Train Loss: ", trainLoss)
+        print("Train Accuracy: ", trainAccuracy)
+        print("Validation Loss: ", validationLoss)
+        print("Validation Accuracy: ", validationAccuracy)
+        
+        return trainLoss, trainAccuracy, validationLoss, validationAccuracy
+    
     def __sigmoid(self, x):
         if(x > 100.0):
             return 1.0
