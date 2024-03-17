@@ -10,6 +10,7 @@ class NuralNetwork:
         self.outputSize = outputSize
         self.activationFun = activationFun
         self.W, self.B = self.__initilizeWandB(initilizationMethod)
+        self.eps = 1e-4
 
     def __initilizeWandB(self, initilizationMethod="None"):
         W = []
@@ -70,10 +71,9 @@ class NuralNetwork:
                     prev_uw = uw
                     prev_ub = ub
                     dw, db = self.__initilizeWandB()
-            
-            print("Loss after epoch ", i+1, ": ")    
+             
+            print("Loss after epoch ", i+1, ": ")
             trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
-            print()
             
     def trainByNesterovGradientDescent(self, epochs, batchSize, eta, beta, train_X, train_Y, val_X, val_Y, lossFunction, weightDecay):
         prev_vw, prev_vb = self.__initilizeWandB()
@@ -108,12 +108,11 @@ class NuralNetwork:
                     prev_vw = vw
                     prev_vb = vb
                     dw, db = self.__initilizeWandB()
-            
-            print("Loss after epoch ", i+1, ": ")    
+               
+            print("Loss after epoch ", i+1, ": ")
             trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
-            print()
 
-    def trainByStochasticGradientDescent(self, epochs, batchSize, eta, train_X, train_Y, val_X, val_Y, lossFunction, weightDecay): 
+    def trainByStochasticGradientDescent(self, epochs, batchSize, eta, train_X, train_Y, val_X, val_Y, lossFunction, weightDecay):  
         for i in range(epochs):
             dw, db = self.__initilizeWandB()
             pointSeen = 0
@@ -130,12 +129,11 @@ class NuralNetwork:
                     self.W = self.__subtractTwoGradient(self.W, self.__multiplyGradientByConstant(dw, eta))
                     self.B = self.__subtractTwoGradient(self.B, self.__multiplyGradientByConstant(db, eta))
                     dw, db = self.__initilizeWandB()
-            
-            print("Loss after epoch ", i+1, ": ")    
+               
+            print("Loss after epoch ", i+1, ": ")
             trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
-            print()
     
-    def trainByRmsprop(self, epochs, batchSize, eta, beta, eps, train_X, train_Y, val_X, val_Y, lossFunction, weightDecay):
+    def trainByRmsprop(self, epochs, batchSize, eta, beta, train_X, train_Y, val_X, val_Y, lossFunction, weightDecay):
         v_w, v_b = self.__initilizeWandB()
         
         for i in range(epochs):
@@ -154,16 +152,15 @@ class NuralNetwork:
                     v_w = self.__addTwoGradient(self.__multiplyGradientByConstant(v_w, beta), self.__multiplyGradientByConstant(self.__squareOfElementsOfGradient(dw), (1.0-beta)))
                     v_b = self.__addTwoGradient(self.__multiplyGradientByConstant(v_b, beta), self.__multiplyGradientByConstant(self.__squareOfElementsOfGradient(db), (1.0-beta)))
                     
-                    self.W = self.__subtractTwoGradient(self.W, self.__divideTwoGradient(self.__multiplyGradientByConstant(dw, eta), self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_w), eps)))
-                    self.B = self.__subtractTwoGradient(self.B, self.__divideTwoGradient(self.__multiplyGradientByConstant(db, eta), self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_b), eps)))
+                    self.W = self.__subtractTwoGradient(self.W, self.__divideTwoGradient(self.__multiplyGradientByConstant(dw, eta), self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_w), self.eps)))
+                    self.B = self.__subtractTwoGradient(self.B, self.__divideTwoGradient(self.__multiplyGradientByConstant(db, eta), self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_b), self.eps)))
                     
                     dw, db = self.__initilizeWandB()
-                
-            print("Loss after epoch ", i+1, ": ")    
+                   
+            print("Loss after epoch ", i+1, ": ")
             trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
-            print()
     
-    def trainByAdam(self, epochs, batchSize, eta, beta1, beta2, eps, train_X, train_Y, val_X, val_Y, lossFunction, weightDecay):
+    def trainByAdam(self, epochs, batchSize, eta, beta1, beta2, train_X, train_Y, val_X, val_Y, lossFunction, weightDecay):
         m_w, m_b = self.__initilizeWandB()
         v_w, v_b = self.__initilizeWandB()
         
@@ -192,16 +189,15 @@ class NuralNetwork:
                     v_w_hat = self.__multiplyGradientByConstant(v_w, c2)
                     v_b_hat = self.__multiplyGradientByConstant(v_b, c2)
                     
-                    self.W = self.__subtractTwoGradient(self.W, self.__divideTwoGradient(self.__multiplyGradientByConstant(m_w_hat, eta), self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_w_hat), eps)))
-                    self.B = self.__subtractTwoGradient(self.B, self.__divideTwoGradient(self.__multiplyGradientByConstant(m_b_hat, eta), self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_b_hat), eps)))
+                    self.W = self.__subtractTwoGradient(self.W, self.__divideTwoGradient(self.__multiplyGradientByConstant(m_w_hat, eta), self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_w_hat), self.eps)))
+                    self.B = self.__subtractTwoGradient(self.B, self.__divideTwoGradient(self.__multiplyGradientByConstant(m_b_hat, eta), self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_b_hat), self.eps)))
                     
                     dw, db = self.__initilizeWandB()
-                
-            print("Loss after epoch ", i+1, ": ")    
+                   
+            print("Loss after epoch ", i+1, ": ")
             trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
-            print()
     
-    def trainByNadam(self, epochs, batchSize, eta, beta1, beta2, eps, train_X, train_Y, val_X, val_Y, lossFunction, weightDecay):
+    def trainByNadam(self, epochs, batchSize, eta, beta1, beta2, train_X, train_Y, val_X, val_Y, lossFunction, weightDecay):
         m_w, m_b = self.__initilizeWandB()
         v_w, v_b = self.__initilizeWandB()
         
@@ -231,14 +227,13 @@ class NuralNetwork:
                     v_b_hat = self.__multiplyGradientByConstant(v_b, c2)
                    
                     c3 = (1.0-beta1) / (1.0-beta1**(i+1))
-                    self.W = self.__subtractTwoGradient(self.W, self.__multiplyTwoGradient(self.__divideGrdientByConstant(eta, self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_w_hat), eps)), self.__addTwoGradient(self.__multiplyGradientByConstant(m_w_hat, beta1), self.__multiplyGradientByConstant(dw, c3))))
-                    self.B = self.__subtractTwoGradient(self.B, self.__multiplyTwoGradient(self.__divideGrdientByConstant(eta, self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_b_hat), eps)), self.__addTwoGradient(self.__multiplyGradientByConstant(m_b_hat, beta1), self.__multiplyGradientByConstant(db, c3))))
+                    self.W = self.__subtractTwoGradient(self.W, self.__multiplyTwoGradient(self.__divideGrdientByConstant(eta, self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_w_hat), self.eps)), self.__addTwoGradient(self.__multiplyGradientByConstant(m_w_hat, beta1), self.__multiplyGradientByConstant(dw, c3))))
+                    self.B = self.__subtractTwoGradient(self.B, self.__multiplyTwoGradient(self.__divideGrdientByConstant(eta, self.__addGradientbyConstant(self.__rootOfElementsOfGradient(v_b_hat), self.eps)), self.__addTwoGradient(self.__multiplyGradientByConstant(m_b_hat, beta1), self.__multiplyGradientByConstant(db, c3))))
                 
                     dw, db = self.__initilizeWandB()
-                
-            print("Loss after epoch ", i+1, ": ")    
+                    
+            print("Loss after epoch ", i+1, ": ")
             trainLoss, trainAccuracy, validationLoss, validationAccuracy = self.__calculateAndPrintLossAndAccuracy(train_X, train_Y, val_X, val_Y, lossFunction)
-            print()
     
     def __forwardPropagation(self, input):
         A = []
@@ -387,7 +382,7 @@ class NuralNetwork:
         trainAccuracy = self.__calculateAvgAccuracy(train_X, train_Y)
         validationLoss = self.__calculateAvgLoss(val_X, val_Y, lossFunction)
         validationAccuracy = self.__calculateAvgAccuracy(val_X, val_Y)
-        
+     
         print("Train Loss: ", trainLoss)
         print("Train Accuracy: ", trainAccuracy)
         print("Validation Loss: ", validationLoss)
