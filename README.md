@@ -74,7 +74,7 @@ The wandb visualization for question 5 : [link](https://wandb.ai/cs23m056/CS23M0
 
 ## Question 6
 
-The wandb visualisation for question 6 : [link](https://wandb.ai/cs23m056/CS23M056_DL_Assignment_1/sweeps/wjf12n56).
+The wandb visualization for question 6 : [link](https://wandb.ai/cs23m056/CS23M056_DL_Assignment_1/sweeps/wjf12n56).
 
 ## Question 7
 
@@ -102,19 +102,18 @@ The code for question 7 : [link](https://github.com/Rupak-Paul/Feedforward-Neura
 The wandb visualization for question 7 : [link](https://wandb.ai/cs23m056/CS23M056_DL_Assignment_1_Q7).
 
 ## Question 8
-- By Fixing the hyperparameters and traind the model with 'cross validation' and 'squared loss' loss functions. we idetified that with cross
+- By Fixing the hyperparameters and traind the model with 'cross validation' and 'squared loss' loss functions. we identified that with cross
   entropy loss function accuracy is more than squared loss.
-- Generated comparion plots in wandb.ai for accuracy and loss  
+- Generated comparison plots in wandb.ai for accuracy and loss  
 
 The code for question 8 : [link](https://github.com/Rupak-Paul/Feedforward-Neural-Network/blob/main/Q8.py).
 The wandb visualisation for question 8 : [link]().
 
 ## Question 10
-- Trained the netowrk with mnist dataset by taking best hyperparameters derived using fashion mnist dataset.
-- Made some few changes to parameters to impove the mnist dataset accuracy. 
+- Trained the network with mnist dataset by taking best hyperparameters derived using fashion mnist dataset.
+- Made some few changes to parameters to improve the mnist dataset accuracy. 
 
 The code for question 10 : [link](https://github.com/Rupak-Paul/Feedforward-Neural-Network/blob/main/Q10.py).
-The wandb visualisation for question 10 : [link]().
 
 ## Report
-The report for this assignment : [link]().
+The report for this assignment : [link](https://wandb.ai/cs23m056/CS23M056_DL_Assignment_1/reports/CS6910-Assignment-1--Vmlldzo3MTg1Mzgz).
