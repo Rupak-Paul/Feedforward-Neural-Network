@@ -479,7 +479,6 @@ def main():
     plt.yticks(ticks=np.arange(10) + 0.5, labels=[class_names[i] for i in range(10)], rotation=0)
     plt.show()
     
-    # Log the confusion matrix
     wandb.log({
         "confusion_matrix": wandb.plot.confusion_matrix(probs=None, y_true=y_true, preds=y_pred, class_names=class_names)
     })

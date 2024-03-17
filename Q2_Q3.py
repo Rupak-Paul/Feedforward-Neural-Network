@@ -422,60 +422,55 @@ class NuralNetwork:
             return 1.0
 
 
-
 def main():
-    # Load MNIST data using Keras
-    (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
-
-    # Train validation division
-    train_images, val_images, train_labels, val_labels = train_test_split(train_images, train_labels, test_size=0.1, shuffle=True, random_state=42)
-
-    # Preprocess the data (Normalize pixel values to be between 0 and 1)
-    train_images = train_images / 255.0
-    val_images = val_images / 255.0
-    test_images = test_images / 255.0
-
-    # Flatten the images
-    train_images = train_images.reshape((-1, 28 * 28))
-    val_images = val_images.reshape((-1, 28 * 28))
-    test_images = test_images.reshape((-1, 28 * 28))
-
-    # epochs:               5, 10
-    # hiddenLayers:         3, 4, 5
-    # hiddenLayerSize:      32, 64, 128
-    # weightDecay:          0, 0.0005, 0.5
-    # learningRate:         1e-3, 1 e-4
-    # optimizer:            sgd, momentum, nesterov, rmsprop, adam, nadam
-    # batchSize:            16, 32, 64
-    # weightInitialisation: random, Xavier
-    # activationFunctions:  sigmoid, tanh, ReLU
-    # lossFunction:         cross entropy, squared error
-
     epochs = 10
-    hiddenLayers = 3
-    hiddenLayerSize = 32
-    weightDecay = 0.0005
-    learningRate = 1e-3
+    hiddenLayers = 4
+    hiddenLayerSize = 64
+    weightDecay = 0
+    learningRate = 0.01
+    optimizer = 'nadam'
+    batchSize = 32
+    weightInitialisation = 'Xavier'
+    activationFunction = 'ReLU'
+    lossFunction = 'cross entropy'
     beta = 0.9
     beta1 = 0.9
     beta2 = 0.999
-    optimizer = "sgd"
-    batchSize = 16
-    weightInitialisation = "Xavier"
-    activationFunction = "ReLU"
-    lossFunction = "cross entropy"
-    inputSize = 28 * 28
+    inputSize = 28*28
     outputSize = 10
     
     NL = NuralNetwork(hiddenLayers, hiddenLayerSize, inputSize, outputSize, activationFunction, weightInitialisation)
-    NL.trainByStochasticGradientDescent(epochs, batchSize, learningRate, train_images, train_labels, val_images, val_labels, lossFunction, weightDecay)
-    
+    if(optimizer == "sgd"):
+        NL.trainByStochasticGradientDescent(epochs, batchSize, learningRate, train_images, train_labels, val_images, val_labels, lossFunction, weightDecay)
+    elif(optimizer == "momentum"):
+        NL.trainByMomentumGradientDescent(epochs, batchSize, learningRate, beta, train_images, train_labels, val_images, val_labels, lossFunction, weightDecay)
+    elif(optimizer == "nesterov"):
+        NL.trainByNesterovGradientDescent(epochs, batchSize, learningRate, beta, train_images, train_labels, val_images, val_labels, lossFunction, weightDecay)
+    elif(optimizer == "rmsprop"):
+        NL.trainByRmsprop(epochs, batchSize, learningRate, beta, train_images, train_labels, val_images, val_labels, lossFunction, weightDecay)
+    elif(optimizer == "adam"):
+        NL.trainByAdam(epochs, batchSize, learningRate, beta1, beta2, train_images, train_labels, val_images, val_labels, lossFunction, weightDecay)
+    elif(optimizer == "nadam"):
+        NL.trainByNadam(epochs, batchSize, learningRate, beta1, beta2, train_images, train_labels, val_images, val_labels, lossFunction, weightDecay)
+
     correctPrediction = 0
     for X, Y in zip(test_images, test_labels):
         ans = NL.predict(X)
         if(ans == Y):
             correctPrediction += 1
-    
     print("Test accuracy: ", correctPrediction/len(test_images))
+    
+
+##########################################################################################################
+(train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
+train_images, val_images, train_labels, val_labels = train_test_split(train_images, train_labels, test_size=0.1, shuffle=True, random_state=42)
+
+train_images = train_images / 255.0
+val_images = val_images / 255.0
+test_images = test_images / 255.0
+
+train_images = train_images.reshape((-1, 28 * 28))
+val_images = val_images.reshape((-1, 28 * 28))
+test_images = test_images.reshape((-1, 28 * 28))
 
 main()
